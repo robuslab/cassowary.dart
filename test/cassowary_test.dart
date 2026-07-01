@@ -419,6 +419,59 @@ void main() {
     expect(right.value, 600.0);
   });
 
+  test('batch_edit_constraints', () {
+    final left = Param(0)..name = 'left';
+    final right = Param(0)..name = 'right';
+    final width = Param(0)..name = 'width';
+
+    final s = Solver();
+
+    expect(s.addConstraint(right.equals(left + width)), Result.success);
+    expect(
+      s.addEditVariables(
+        <Variable>[left.variable, width.variable],
+        Priority.strong,
+      ),
+      Result.success,
+    );
+    expect(
+      s.suggestValuesForVariables(<Variable, double>{
+        left.variable: 20,
+        width.variable: 80,
+      }),
+      Result.success,
+    );
+
+    s.flushUpdates();
+
+    expect(left.value, 20.0);
+    expect(width.value, 80.0);
+    expect(right.value, 100.0);
+  });
+
+  test('batch_edit_constraints_reject_unknown_variable', () {
+    final left = Param(0)..name = 'left';
+    final width = Param(0)..name = 'width';
+    final unknown = Param(0)..name = 'unknown';
+
+    final s = Solver();
+
+    expect(s.addEditVariable(left.variable, Priority.strong), Result.success);
+    expect(
+      s.suggestValuesForVariables(<Variable, double>{
+        left.variable: 20,
+        unknown.variable: 80,
+      }),
+      Result.unknownEditVariable,
+    );
+
+    s.flushUpdates();
+
+    expect(left.value, 0.0);
+    expect(width.value, 0.0);
+    expect(unknown.value, 0.0);
+  });
+
   test('test_description', () {
     final left = Param(0);
     final right = Param(100);

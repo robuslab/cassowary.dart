@@ -427,6 +427,27 @@ class Solver {
     return _dualOptimize();
   }
 
+  /// Suggest updated values for edit variables in one optimization pass.
+  ///
+  /// Either all suggestions are applied or none are applied. Every variable in
+  /// [values] must already be an edit variable.
+  Result suggestValuesForVariables(Map<Variable, double> values) {
+    for (final variable in values.keys) {
+      if (!_edits.containsKey(variable)) {
+        return Result.unknownEditVariable;
+      }
+    }
+
+    for (final entry in values.entries) {
+      _suggestValueForEditInfoWithoutDualOptimization(
+        _edits[entry.key]!,
+        entry.value,
+      );
+    }
+
+    return _dualOptimize();
+  }
+
   /// Flush the results of solver. The set of all `context` objects associated
   /// with variables in the [Solver] is returned. If a [Variable] does not
   /// contain an associated context, its updates are ignored.
